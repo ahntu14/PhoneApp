@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const Item = ({ item }) => {
     const navigation = useNavigation();
+    const screen = 'Shop';
 
     function capitalizeFirstLetter(str) {
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -17,7 +18,7 @@ const Item = ({ item }) => {
         <SafeAreaView>
             <View style={styles.container}>
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('ProductDetail', { item })}
+                    onPress={() => navigation.navigate('ProductDetail', { item, screen })}
                     style={styles.imageContainer}
                 >
                     <Image style={styles.image} source={{ uri: item.imageUrl }} />

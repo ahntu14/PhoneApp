@@ -1,15 +1,17 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { SafeAreaView, Text, Image, View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import Search from '../../components/Search';
 import { useDispatch } from 'react-redux';
 import { SELECT_PRODUCT } from '../../redux/reducers/favorite';
+import { ADD_PRODUCT } from '../../redux/reducers/cart';
 
 const ProductDetail = ({ route }) => {
+    const isFocused = useIsFocused();
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const { item } = route.params;
+    const { item, screen } = route.params;
 
     function capitalizeFirstLetter(str) {
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -31,10 +33,22 @@ const ProductDetail = ({ route }) => {
         dispatch({ type: SELECT_PRODUCT, payload: product });
     };
 
+    const handleCart = (product) => {
+        dispatch({ type: ADD_PRODUCT, payload: product });
+    };
+
+    const handleGoBack = () => {
+        if (screen === 'Cart') {
+            navigation.navigate(screen);
+        } else {
+            navigation.goBack();
+        }
+    };
+
     return (
         <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={handleGoBack}>
                     <Image style={styles.arrow} source={require('../../../images/arrow.png')} />
                 </TouchableOpacity>
                 <View>
@@ -65,7 +79,7 @@ const ProductDetail = ({ route }) => {
                     <Text style={styles.selfieCam}>Camera trước: {item.selfieCam}</Text>
                     <Text style={styles.behindCam}>Camera sau: {item.behindCam}</Text>
                     <View style={styles.buttonsContainer}>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity onPress={() => handleCart(item)} style={styles.button}>
                             <Text style={styles.buttonText}>Add to Cart</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleFavorite(item)} style={styles.favoriteButton}>
