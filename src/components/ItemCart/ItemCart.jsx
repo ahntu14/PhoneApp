@@ -7,10 +7,9 @@ import { ADD_TOTAL } from '../../redux/reducers/totalCart';
 import { REMOVE_TOTAL } from '../../redux/reducers/totalCart';
 
 const ItemCart = ({ item }) => {
-    const screen = 'Cart';
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState(item.productQuantity);
     const [totalPrice, setTotalPrice] = useState(quantity * item.newPrice);
 
     useEffect(() => {
@@ -47,7 +46,17 @@ const ItemCart = ({ item }) => {
         <SafeAreaView>
             <View style={styles.container}>
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('ProductDetail', { item, screen })}
+                    onPress={() =>
+                        navigation.navigate('HomeTabs', {
+                            screen: 'Shop',
+                            params: {
+                                screen: 'ProductDetail',
+                                params: {
+                                    item,
+                                },
+                            },
+                        })
+                    }
                     style={styles.imageContainer}
                 >
                     <Image style={styles.image} source={{ uri: item.imageUrl }} />

@@ -19,11 +19,6 @@ const RegisterScreen = () => {
             setError('Email không đúng định dạng.');
             return;
         }
-
-        // Gọi API hoặc thực hiện hành động đăng ký tài khoản ở đây
-        console.log('Đăng ký với:', username, email, password);
-
-        // Hiển thị thông báo thành công và chuyển hướng sau 3 giây
         setTimeout(() => {
             alert('Đăng ký thành công!');
             navigation.navigate('Login');
@@ -31,7 +26,6 @@ const RegisterScreen = () => {
     };
 
     const validateEmail = (email) => {
-        // Kiểm tra xem email có đúng định dạng hay không
         const regex = /\S+@\S+\.\S+/;
         return regex.test(email);
     };

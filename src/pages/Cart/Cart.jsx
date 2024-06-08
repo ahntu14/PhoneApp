@@ -1,18 +1,67 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
 // eslint-disable-next-line no-shadow
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView, Text, View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import ItemCart from '../../components/ItemCart';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
-import { REMOVE_PRODUCT } from '../../redux/reducers/cart';
+import axios from 'axios';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const Cart = () => {
     // eslint-disable-next-line no-unused-vars
     const dispatch = useDispatch();
-    const cartProduct = useSelector((state) => state.cartProduct);
-    const product = cartProduct.cartProduct;
+    const navigation = useNavigation();
+    const userInfo = useSelector((state) => state.userInfo);
+    const [fee, setFee] = useState('');
+
+    const [products, setProducts] = useState([]);
+    const [res, setRes] = useState();
+
+    const handleCheckout = async () => {
+        const response = await axios.post('http://10.0.2.2:1406/user/momo-pay', {
+            total: total,
+        });
+
+        navigation.navigate('Payment', { state: response.data });
+    };
+
+    const GetFee = async () => {
+        const response = await axios.get('http://10.0.2.2:1406/user/info', {
+            headers: {
+                'Content-Type': 'application/json',
+                AccessToken: userInfo.accessToken,
+            },
+        });
+        setRes(response);
+        const parts = response.data[0].address_code.split(', ');
+
+        const districtId = parseInt(parts[1]);
+        const wardCode = parseInt(parts[2]);
+
+        const feeResponse = await axios.post('http://10.0.2.2:1406/user/fee', {
+            total: total,
+            toDistrictId: parseInt(districtId),
+            toWardId: parseInt(wardCode),
+        });
+        if (feeResponse.data.code === 200) {
+            setFee(feeResponse.data.data.service_fee);
+        } else {
+            setFee(0);
+        }
+    };
+
+    const GetCart = async () => {
+        const result = await axios.get('http://10.0.2.2:1406/user/cart', {
+            headers: {
+                'Content-Type': 'application/json',
+                AccessToken: userInfo.accessToken,
+            },
+        });
+        setProducts(result.data);
+    };
 
     const [edit, setEdit] = useState(false);
 
@@ -27,24 +76,32 @@ const Cart = () => {
         setEdit(!edit);
     };
 
-    const handleRemove = (item) => {
-        dispatch({ type: REMOVE_PRODUCT, payload: item });
+    const handleRemove = async (item) => {
+        await axios.delete(`http://10.0.2.2:1406/user/cart/${item.id}`);
+        await GetCart();
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            GetFee();
+            GetCart();
+        }, []),
+    );
 
     const renderItem = ({ item }) => {
         return (
             <View>
                 <ItemCart item={item} />
                 {edit && (
-                    <TouchableOpacity onPress={() => handleRemove(item)}>
-                        <Image style={styles.editButton} source={require('../../../images/trash.png')} />
+                    <TouchableOpacity style={styles.editButton} onPress={() => handleRemove(item)}>
+                        <Image style={styles.itemTrash} source={require('../../../images/trash.png')} />
                     </TouchableOpacity>
                 )}
             </View>
         );
     };
 
-    if (product.length > 0) {
+    if (products.length > 0) {
         return (
             <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
                 <View style={styles.container}>
@@ -56,7 +113,7 @@ const Cart = () => {
                     </View>
                     <View style={styles.flatListContainer}>
                         <FlatList
-                            data={product}
+                            data={products}
                             renderItem={renderItem}
                             keyExtractor={(item, index) => index.toString()}
                             numColumns={1}
@@ -69,16 +126,18 @@ const Cart = () => {
                             </View>
                             <View style={styles.price}>
                                 <Text style={styles.totalText}>Shipping: </Text>
-                                <Text style={styles.boxPrice}>{formatCurrency(total)}</Text>
+                                <Text style={styles.boxPrice}>
+                                    {fee === 0 ? 'Chưa rõ địa chỉ' : formatCurrency(fee)}
+                                </Text>
                             </View>
                             <View style={styles.price}>
                                 <Text style={styles.totalText}>Total: </Text>
-                                <Text style={styles.boxPrice}>{formatCurrency(total)}</Text>
+                                <Text style={styles.boxPrice}>{formatCurrency(total + fee)}</Text>
                             </View>
                         </View>
                     </View>
                     <View style={styles.buttonsContainer}>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity style={styles.button} onPress={handleCheckout}>
                             <Text style={styles.buttonText}>Checkout</Text>
                         </TouchableOpacity>
                     </View>
@@ -131,11 +190,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     editButton: {
-        width: 20,
-        height: 20,
-        marginTop: -190,
-        marginLeft: 350,
+        marginTop: 0,
+        marginLeft: 175,
+        top: -200,
+        right: -170,
     },
+    itemTrash: { width: 20, height: 20 },
     box: {
         marginTop: 10,
         marginBottom: 15,
@@ -150,8 +210,6 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        // alignContent: 'center',
-        // alignItems: 'center',
     },
     boxPrice: {
         color: 'black',

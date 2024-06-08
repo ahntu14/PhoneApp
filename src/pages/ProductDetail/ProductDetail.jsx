@@ -1,17 +1,19 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { SafeAreaView, Text, Image, View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Search from '../../components/Search';
 import { useDispatch } from 'react-redux';
-import { SELECT_PRODUCT } from '../../redux/reducers/favorite';
-import { ADD_PRODUCT } from '../../redux/reducers/cart';
+import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 const ProductDetail = ({ route }) => {
-    const isFocused = useIsFocused();
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const { item, screen } = route.params;
+    const userInfo = useSelector((state) => state.userInfo);
+
+    let rate = Math.round(item.rate / item.numberReview);
 
     function capitalizeFirstLetter(str) {
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -29,12 +31,45 @@ const ProductDetail = ({ route }) => {
         return stars;
     };
 
-    const handleFavorite = (product) => {
-        dispatch({ type: SELECT_PRODUCT, payload: product });
+    const handleFavorite = async (product) => {
+        try {
+            const newProducts = await axios.post(
+                'http://10.0.2.2:1406/user/favorite',
+                {
+                    productId: product.id,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // eslint-disable-next-line prettier/prettier
+                        AccessToken: userInfo.accessToken,
+                    },
+                },
+            );
+        } catch (error) {
+            throw error;
+        }
     };
 
-    const handleCart = (product) => {
-        dispatch({ type: ADD_PRODUCT, payload: product });
+    const handleCart = async (product) => {
+        try {
+            const newProducts = await axios.post(
+                'http://10.0.2.2:1406/user/cart',
+                {
+                    productId: product.id,
+                    quantity: 1,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // eslint-disable-next-line prettier/prettier
+                        AccessToken: userInfo.accessToken,
+                    },
+                },
+            );
+        } catch (error) {
+            throw error;
+        }
     };
 
     const handleGoBack = () => {
@@ -66,7 +101,7 @@ const ProductDetail = ({ route }) => {
                         <Text style={styles.category}>{capitalizeFirstLetter(item.category)}</Text>
                         <View style={styles.ratingContainer}>
                             <Text style={styles.ratingText}>Đánh giá:</Text>
-                            <Text style={styles.ratingStars}>{renderRating(4)}</Text>
+                            <Text style={styles.ratingStars}>{renderRating(rate)}</Text>
                         </View>
                     </View>
                     <Text style={styles.name}>{capitalizeFirstLetter(item.name)}</Text>
@@ -76,8 +111,11 @@ const ProductDetail = ({ route }) => {
                     <Text style={styles.ram}>Ram: {item.ram}GB</Text>
                     <Text style={styles.rom}>Rom: {item.rom}GB</Text>
                     <Text style={styles.screen}>Màn hình: {item.screen}</Text>
+                    <Text style={styles.behindCam}>Pin: {item.pin} mAh</Text>
+                    <Text style={styles.behindCam}>Sạc: {item.chargeSpeed} W</Text>
                     <Text style={styles.selfieCam}>Camera trước: {item.selfieCam}</Text>
                     <Text style={styles.behindCam}>Camera sau: {item.behindCam}</Text>
+
                     <View style={styles.buttonsContainer}>
                         <TouchableOpacity onPress={() => handleCart(item)} style={styles.button}>
                             <Text style={styles.buttonText}>Add to Cart</Text>

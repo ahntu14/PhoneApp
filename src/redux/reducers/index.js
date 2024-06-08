@@ -1,11 +1,11 @@
 import { combineReducers } from 'redux';
-import info from './infoReducer.js';
+import userInfo from './infoReducer.js';
 import selectedProduct from './favorite.js';
 import cartProduct from './cart.js';
 import totalReducer from './totalCart.js';
 
 const reducers = combineReducers({
-    userInfo: info,
+    userInfo: userInfo,
     selectedProduct: selectedProduct,
     cartProduct: cartProduct,
     totalReducer: totalReducer,

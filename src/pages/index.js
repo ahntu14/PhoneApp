@@ -11,9 +11,14 @@ import Shop from './Shop';
 import Profile from './Profile';
 import SearchScreen from './SearchScreen';
 import ProductDetail from './ProductDetail';
+import Payment from './Payment';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import OrderReturn from './OrderReturn/OrderReturn';
+import EditProfile from './EditProfile';
+import Orders from './Orders';
+import OrderDetail from './OrderDetail';
 
 const Tab = createBottomTabNavigator();
 
@@ -31,16 +36,6 @@ function MyTabs() {
                     null,
                 ],
             }}
-            // tabBarOptions={{
-            //     tabBarActiveTintColor: 'black',
-            //     tabBarInactiveTintColor: '#999999',
-            //     tabBarStyle: [
-            //         {
-            //             display: 'flex',
-            //         },
-            //         null,
-            //     ],
-            // }}
         >
             <Tab.Screen
                 name="Home"
@@ -80,7 +75,7 @@ function MyTabs() {
             />
             <Tab.Screen
                 name="Cart"
-                component={Cart}
+                component={CartStackScreen}
                 options={{
                     tabBarIcon: () => (
                         <Image
@@ -92,7 +87,7 @@ function MyTabs() {
             />
             <Tab.Screen
                 name="Profile"
-                component={Profile}
+                component={ProfileStackScreen}
                 options={{
                     tabBarIcon: () => (
                         <Image
@@ -106,6 +101,8 @@ function MyTabs() {
     );
 }
 
+const Stack = createStackNavigator();
+
 const ShopStack = () => (
     <Stack.Navigator>
         <Stack.Screen name="ShopHome" component={Shop} options={{ headerShown: false }} />
@@ -114,7 +111,22 @@ const ShopStack = () => (
     </Stack.Navigator>
 );
 
-const Stack = createStackNavigator();
+const CartStackScreen = () => (
+    <Stack.Navigator>
+        <Stack.Screen name="CartHome" component={Cart} options={{ headerShown: false }} />
+        <Stack.Screen name="Payment" component={Payment} options={{ headerShown: false }} />
+        <Stack.Screen name="Return" component={OrderReturn} options={{ headerShown: false }} />
+    </Stack.Navigator>
+);
+
+const ProfileStackScreen = () => (
+    <Stack.Navigator>
+        <Stack.Screen name="ProfileHome" component={Profile} options={{ headerShown: false }} />
+        <Stack.Screen name="EditProfile" component={EditProfile} options={{ headerShown: false }} />
+        <Stack.Screen name="Orders" component={Orders} options={{ headerShown: false }} />
+        <Stack.Screen name="OrderDetail" component={OrderDetail} options={{ headerShown: false }} />
+    </Stack.Navigator>
+);
 
 export const RootComponent = function () {
     return (

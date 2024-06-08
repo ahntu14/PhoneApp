@@ -1,39 +1,53 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Text, Image, View, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Item from '../../components/Item';
 import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { REMOVE_FAVORITE } from '../../redux/reducers/favorite';
+
+import axios from 'axios';
 
 const Favorites = () => {
-    const selectedProduct = useSelector((state) => state.selectedProduct);
-    const product = selectedProduct.selectedProduct;
     const navigation = useNavigation();
-    const dispatch = useDispatch();
+    const [product, setProduct] = useState([]);
     const [edit, setEdit] = useState(false);
-    // const [products, setProducts] = useState(product ? [product] : []);
+    const userInfo = useSelector((state) => state.userInfo);
+
+    const GetFavorite = async () => {
+        const response = await axios.get('http://10.0.2.2:1406/user/favorite', {
+            headers: {
+                'Content-Type': 'application/json',
+                AccessToken: userInfo.accessToken,
+            },
+        });
+        setProduct(response.data);
+    };
+
+    const DeleteFavorite = async (productId) => {
+        await axios.delete(`http://10.0.2.2:1406/user/favorite/${productId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                AccessToken: userInfo.accessToken,
+            },
+        });
+        await GetFavorite();
+    };
 
     useEffect(() => {
-        setEdit(false);
-
+        GetFavorite();
         const unsubscribe = navigation.addListener('blur', () => {
             setEdit(false);
         });
 
         return unsubscribe;
-    }, [navigation]);
-
-    const handleRemove = (item) => {
-        dispatch({ type: REMOVE_FAVORITE, payload: item });
-    };
+    }, [product, navigation]);
 
     const renderItem = ({ item }) => (
-        <View>
+        <View style={styles.itemContainer}>
             <Item item={item} />
             {edit && (
-                <TouchableOpacity onPress={() => handleRemove(item)}>
+                <TouchableOpacity onPress={() => DeleteFavorite(item?.id)} style={styles.deleteButton}>
                     <Image style={styles.editButton} source={require('../../../images/minus.png')} />
                 </TouchableOpacity>
             )}
@@ -44,12 +58,12 @@ const Favorites = () => {
         setEdit(!edit);
     };
 
-    if (product.length > 0) {
+    if (product && product.length > 0) {
         return (
             <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
                 <View style={styles.container}>
                     <TouchableOpacity onPress={handleEdit}>
-                        <Text style={styles.editBtn}>{!edit ? 'Edit' : 'Save'}</Text>
+                        <Text style={styles.editBtn}>{edit ? 'Save' : 'Edit'}</Text>
                     </TouchableOpacity>
                     <View>
                         <Text style={styles.favoriteText}>Favorites</Text>
@@ -77,7 +91,13 @@ const Favorites = () => {
                         <Text style={styles.favoriteText}>Favorites</Text>
                     </View>
                     <View>
-                        <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <View
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
                             <Image style={styles.heart} source={require('../../../images/heart2.png')} />
                             <Text style={styles.text}>Items added to your favorites are empty</Text>
                         </View>
@@ -147,15 +167,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
         paddingTop: 5,
     },
-    // itemContainer: {
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    // },
+    itemContainer: {
+        borderColor: '#ddd',
+        backgroundColor: '#fff',
+        position: 'relative',
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: 240,
+        right: 25,
+        borderRadius: 15,
+        padding: 5,
+    },
     editButton: {
-        width: 20,
-        height: 20,
-        marginTop: -40,
-        marginLeft: 150,
+        width: 25,
+        height: 25,
     },
 });
 

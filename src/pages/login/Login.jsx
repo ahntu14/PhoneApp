@@ -2,32 +2,46 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import {
+    UPDATE_NAME,
+    UPDATE_EMAIL,
+    REFRESH_TOKEN,
+    ACCESS_TOKEN,
+    UPDATE_PHONE,
+    UPDATE_ADDRESS,
+} from '../../redux/reducers/infoReducer';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigation = useNavigation();
+    const dispatch = useDispatch();
 
     const handleLogin = async () => {
-        // if (!email || !password) {
-        //     setError('Vui lòng nhập email và mật khẩu.');
-        //     return;
-        // } else {
-        //     await axios
-        //         .post('http://10.0.2.2:1406/auth/login', {
-        //             email: email,
-        //             password: password,
-        //         })
-        //         .then((res) => {
-        //             console.log(res.data);
-        //             navigation.navigate('Home');
-        //         })
-        //         .catch((err) => console.log(err));
-
-        //     console.log('Đăng nhập với:', email, password);
-        // }
-        navigation.navigate('HomeTabs');
+        if (!email || !password) {
+            setError('Vui lòng nhập email và mật khẩu.');
+            return;
+        } else {
+            await axios
+                .post('http://10.0.2.2:1406/auth/login', {
+                    email: email,
+                    password: password,
+                })
+                .then((res) => {
+                    dispatch({ type: UPDATE_NAME, payload: res.data.name });
+                    dispatch({ type: UPDATE_EMAIL, payload: res.data.email });
+                    dispatch({ type: ACCESS_TOKEN, payload: res.data.accessToken });
+                    dispatch({ type: REFRESH_TOKEN, payload: res.data.refreshToken });
+                    dispatch({ type: UPDATE_PHONE, payload: res.data.phone });
+                    dispatch({ type: UPDATE_ADDRESS, payload: res.data.address });
+                    setEmail('');
+                    setPassword('');
+                    navigation.navigate('HomeTabs');
+                })
+                .catch((err) => console.log(err));
+        }
     };
 
     return (
